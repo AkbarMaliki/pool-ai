@@ -1,0 +1,6 @@
+{
+  "name": "pool-3d",
+  "private": true,
+  "type": "commonjs",
+  "scripts": { "test": "node tests/engine.test.js", "start": "npx serve ." }
+}

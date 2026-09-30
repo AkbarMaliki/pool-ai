@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="icon" href="data:,">
+  <title>Pool 3D — 8 Ball</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <!-- HUD atas -->
+  <div id="hud" hidden>
+    <div class="pl" id="pl0"><div class="nm"></div><div class="balls"></div></div>
+    <div id="center">
+      <div id="turnInfo"></div>
+      <button id="roomBadge" class="chip" hidden title="Salin link undangan"></button>
+    </div>
+    <div class="pl right" id="pl1"><div class="nm"></div><div class="balls"></div></div>
+  </div>
+  <div id="tbtns" hidden>
+    <button id="btnView" title="Ganti kamera (T)">🎥</button>
+    <button id="btnGuide" title="Garis arah setelah tumbukan (G)">📐</button>
+    <button id="btnSound" title="Suara">🔊</button>
+    <button id="btnChat" title="Chat" hidden>💬</button>
+    <button id="btnHelp" title="Bantuan">❔</button>
+    <button id="btnLeave" title="Keluar">✕</button>
+  </div>
+
+  <div id="toast" hidden></div>
+  <div id="hint" hidden></div>
+
+  <!-- kontrol pukulan -->
+  <div id="power" hidden>
+    <div class="lbl">POWER</div>
+    <div id="powerBar"><div id="powerFill"></div><div id="powerKnob"></div></div>
+    <div id="powerVal">0%</div>
+  </div>
+  <div id="spinBox" hidden>
+    <div id="spin"><div id="spinDot"></div></div>
+    <button id="spinReset" title="Reset efek">⟲</button>
+  </div>
+  <div id="fineAim" hidden>
+    <button id="aimL">◀</button>
+    <button id="aimR">▶</button>
+  </div>
+  <button id="btnClaim" hidden>Klaim Menang</button>
+
+  <!-- chat -->
+  <div id="chat" hidden>
+    <div id="chatLog"></div>
+    <form id="chatForm" class="row"><input id="chatIn" maxlength="120" placeholder="Tulis pesan…" autocomplete="off"><button>Kirim</button></form>
+  </div>
+
+  <!-- menu -->
+  <div id="overlay">
+    <div class="card" id="menu">
+      <h1>🎱 Pool 3D</h1>
+      <p class="sub">8-Ball · Online &amp; Lawan Bot</p>
+      <label class="field">Nama kamu<input id="nameIn" maxlength="16" placeholder="Nama"></label>
+      <div class="tabs"><button data-tab="online" class="on">🌐 Online</button><button data-tab="offline">🤖 Offline</button></div>
+
+      <div id="tabOnline" class="col">
+        <button id="btnCreate" class="primary wide">Buat Room Baru</button>
+        <div class="row"><input id="codeIn" maxlength="5" placeholder="Kode room" style="text-transform:uppercase"><button id="btnJoin">Gabung</button></div>
+        <div class="roomsHead"><span class="muted">Room terbuka</span><button id="btnRefresh" title="Muat ulang">↻</button></div>
+        <div id="roomList"><div class="muted">Memuat…</div></div>
+        <div class="conn"><span id="connDot"></span><span id="connTxt">Menghubungkan…</span></div>
+      </div>
+
+      <div id="tabOffline" class="col" hidden>
+        <label class="field">Level bot
+          <select id="botLevel"><option value="0">Mudah</option><option value="1" selected>Sedang</option><option value="2">Sulit</option></select>
+        </label>
+        <button id="btnBot" class="primary wide">Main Lawan Bot</button>
+        <button id="btnLocal" class="wide">2 Pemain (1 perangkat)</button>
+      </div>
+      <p class="hint">Drag untuk membidik · tarik bar POWER ke bawah lalu lepas untuk memukul</p>
+    </div>
+
+    <div class="card" id="lobby" hidden>
+      <h2>Room <span id="lobbyCode" class="code"></span></h2>
+      <p class="sub">Bagikan kode atau link ini ke temanmu</p>
+      <div class="row"><input id="lobbyLink" readonly><button id="btnCopy">Salin</button></div>
+      <div id="lobbyPlayers" class="col"></div>
+      <p class="muted" id="lobbyStatus" style="text-align:center">Menunggu lawan…</p>
+      <button id="btnLobbyLeave" class="wide">Batal</button>
+    </div>
+
+    <div class="card" id="result" hidden>
+      <h2 id="resTitle"></h2>
+      <p class="sub" id="resReason"></p>
+      <button id="btnAgain" class="primary wide">Main Lagi</button>
+      <p class="muted" id="resWait" style="text-align:center" hidden></p>
+      <button id="btnMenu" class="wide">Menu Utama</button>
+    </div>
+
+    <div class="card" id="help" hidden>
+      <h2>Cara Main</h2>
+      <ul class="helpList">
+        <li><b>Bidik:</b> drag di layar (kiri/kanan). Tahan <kbd>Shift</kbd> atau pakai tombol ◀ ▶ untuk bidikan halus. Drag atas/bawah mengubah sudut kamera, scroll/pinch untuk zoom.</li>
+        <li><b>Pukul:</b> tarik bar <b>POWER</b> ke bawah lalu lepas. Keyboard: <kbd>↑</kbd><kbd>↓</kbd> atur power, <kbd>Spasi</kbd> pukul.</li>
+        <li><b>Efek:</b> klik lingkaran bola putih di kiri bawah (atas = follow, bawah = draw, samping = english).</li>
+        <li><b>Bola di tangan:</b> drag bola putih ke posisi yang diinginkan. Saat break hanya di belakang garis kepala.</li>
+        <li><b>Garis arah:</b> 📐 / <kbd>G</kbd> menyalakan/mematikan garis perkiraan arah bola sasaran &amp; bola putih setelah tumbukan.</li>
+        <li><b>Kamera:</b> <kbd>T</kbd> / 🎥 untuk tampilan atas. Di tampilan atas, klik meja untuk membidik ke titik itu.</li>
+        <li><b>Aturan 8-ball:</b> masukkan semua bola grupmu (solid 1–7 atau belang 9–15), lalu bola 8. Foul (scratch, salah kena bola, tidak ada bantalan setelah kontak) memberi lawan bola di tangan. Bola 8 masuk terlalu cepat = kalah.</li>
+      </ul>
+      <button id="btnHelpClose" class="primary wide">Oke</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="engine.js"></script>
+  <script src="scene.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
